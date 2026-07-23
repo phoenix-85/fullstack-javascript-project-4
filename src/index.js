@@ -30,7 +30,7 @@ export default (url, output) => {
 
         const filepath = path.join(
           dirpath,
-          urlToName(imgUrl),
+          urlToName(imgUrl.href),
         )
 
         imgData.push([imgUrl, filepath])
@@ -42,10 +42,10 @@ export default (url, output) => {
       return fs.mkdir(dirpath, { recursive: true })
     })
     .then(() => fs.writeFile(path.join(output, `${name}.html`), html))
-    .then(() => imgData.map(([imgSource, filepath]) => {
-      return axios
-        .get(imgSource.href, {responseType: 'stream'})
-        .then(response => response.data.pipe(fs.createWriteStream(filepath)))
-    }))
-    .then(promises => Promise.all(promises))
+    .then(() => Promise.all(
+      imgData.map(([imgSource, filepath]) => {
+        return axios
+          .get(imgSource.href, { responseType: 'stream' })
+          .then(response => response.data.pipe(fs.createWriteStream(filepath)))
+      })))
 }
