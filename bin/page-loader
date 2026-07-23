@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { program } from 'commander';
-import pageLoader from '../src/index.js';
+import { cwd } from 'node:process'
+import { program } from 'commander'
+import pageLoader from '../src/index.js'
 
 program
   .description('Page loader utility')
@@ -9,7 +10,7 @@ program
   .helpOption('-h, --help', 'display help for command')
   .argument('<url>')
   .action((url) => {
-    pageLoader(url);
-  });
+    pageLoader(url, program.opts().output = cwd())
+  })
 
-program.parse();
+program.parse()
