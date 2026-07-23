@@ -1,5 +1,5 @@
 import axios from 'axios'
-import cheerio from 'nock'
+import * as cheerio from 'cheerio'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 
@@ -11,11 +11,13 @@ function urlToName(url) {
 }
 
 export default (url, output) => {
-  axios.get(url)
+  let html
+  const imgData = []
+  const name = urlToName(url)
+
+  return axios.get(url)
     .then(({ data }) => {
-      const name = urlToName(url)
       const $ = cheerio.load(data)
-      const imgData = []
 
       const dirpath = path.join(
         output,
@@ -24,7 +26,7 @@ export default (url, output) => {
 
       $('img').each((_, img) => {
         const src = $(img).attr('src')
-        const imgUrl = new URL(url, src)
+        const imgUrl = new URL(src, url)
 
         const filepath = path.join(
           dirpath,
@@ -35,22 +37,15 @@ export default (url, output) => {
         $(img).attr('src', filepath)
       })
 
-      fs.mkdir(dirpath, { recursive: true })
-      fs.writeFile(`${name}.html`, $.html())
+      html = $.html()
 
-      return imgData
+      return fs.mkdir(dirpath, { recursive: true })
     })
-    .then(imgData => imgData.map((imgSource, filepath) => {
+    .then(() => fs.writeFile(path.join(output, `${name}.html`), html))
+    .then(() => imgData.map(([imgSource, filepath]) => {
       return axios
         .get(imgSource.href, {responseType: 'stream'})
         .then(response => response.data.pipe(fs.createWriteStream(filepath)))
     }))
     .then(promises => Promise.all(promises))
-
-  // [v] 1. Получаем html по url (axios)
-  // [v] 2. Извлекаем ссылки на картинки из html (cheerio)
-  // [v] 3. Скачиваем картинки по ссылкам (axios)
-  // [ ] 4. Создаем папку по url (mkdir)
-  // [ ] 5. Меняем ссылки на картинки в html (cheerio)
-  // [ ] 6. Сохраняем файлы (html и картинки) (writeFile)
 }
