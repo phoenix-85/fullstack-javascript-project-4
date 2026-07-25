@@ -10,7 +10,7 @@ program
   .helpOption('-h, --help', 'display help for command')
   .argument('<url>')
   .action((url, options) => {
-    pageLoader(url, options().output)
+    pageLoader(url, options.output)
       .then(filepath => console.log(filepath))
       .catch((err) => {
         console.error(err.message)
