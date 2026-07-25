@@ -24,6 +24,13 @@ function formatter(url) {
   return `${hostname}-${pathname}`
 }
 
+function getAssetName(url) {
+  const { pathname } = url
+  const { ext } = path.posix.parse(pathname)
+  const slug = formatter(url)
+  return `${slug}${ext || '.html'}`
+}
+
 export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
@@ -37,7 +44,6 @@ export default (url, output) => {
       const $ = cheerio.load(data)
 
       const tags = {
-        "a": "href",
         "img": "src",
         "link": "href",
         "script": "src",
@@ -49,7 +55,7 @@ export default (url, output) => {
           const resUrl = new URL(src, pageUrl)
 
           if (pageUrl.hostname === resUrl.hostname) {
-            const filename = formatter(resUrl)
+            const filename = getAssetName(resUrl)
             const filepath = path.join(dirpath, filename)
 
             tasks.push({
@@ -65,4 +71,5 @@ export default (url, output) => {
       return fsp.writeFile(path.join(output, `${name}.html`), $.html())
     })
     .then(() => new Listr(tasks, { concurrent: true }).run())
+    .then(() => console.log(`Page was downloaded as ${name}.html`))
 }
