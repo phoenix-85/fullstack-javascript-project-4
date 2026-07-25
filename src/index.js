@@ -14,6 +14,7 @@ function download(url, filepath) {
       writer.on('finish', resolve)
       writer.on('error', reject)
     }))
+    .catch((e) => { throw new Error(`Failed to load resource: ${url.href}. ${e.message}`) })
 }
 
 function formatter(url) {
@@ -64,9 +65,5 @@ export default (url, output) => {
       return fsp.writeFile(path.join(output, `${name}.html`), $.html())
     })
     .then(() => new Listr(tasks, { concurrent: true, exitOnError: true }).run())
-    .then(() => {
-      console.log(`Page was downloaded as ${name}.html`)
-      return undefined
-    })
-    .catch((e) => throw e)
+    .then(() => console.log(`Page was downloaded as ${name}.html`))
 }
