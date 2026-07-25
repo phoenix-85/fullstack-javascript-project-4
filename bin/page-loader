@@ -9,8 +9,8 @@ program
   .option('-o --output [dir]', 'output dir', process.cwd())
   .helpOption('-h, --help', 'display help for command')
   .argument('<url>')
-  .action((url) => {
-    pageLoader(url, program.opts().output)
+  .action((url, options) => {
+    pageLoader(url, options().output)
       .then(filepath => console.log(filepath))
       .catch((err) => {
         console.error(err.message)
