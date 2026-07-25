@@ -6,11 +6,11 @@ import pageLoader from '../src/index.js'
 program
   .description('Page loader utility')
   .version('1.0.0', '-V, --version', 'output the version number')
-  .option('-o --output [dir]', 'output dir', '/home/user/current-dir')
+  .option('-o --output [dir]', 'output dir', cwd())
   .helpOption('-h, --help', 'display help for command')
   .argument('<url>')
   .action((url) => {
-    pageLoader(url, program.opts().output = cwd())
+    pageLoader(url, program.opts().output)
   })
 
 program.parse()
