@@ -31,8 +31,7 @@ export default (url, output) => {
   const dirpath = path.join(output, dirname)
   const tasks = []
 
-  return fsp.mkdir(dirpath, { recursive: true })
-    .catch((err) => { throw new Error(err.message) })
+  return fsp.mkdir(dirpath)
     .then(() => axios.get(pageUrl.href))
     .then(({ data }) => {
       const $ = cheerio.load(data)
