@@ -26,7 +26,7 @@ function formatter(url) {
 export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
-  const dirpath = path.join(output, `${name}_files`)
+  const dirpath = `${name}_files`
   const tasks = []
 
   return fsp.mkdir(dirpath, { recursive: true })
