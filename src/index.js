@@ -26,10 +26,10 @@ function formatter(url) {
 export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
-  const dirpath = `${name}_files`
+  const dirpath = path.join(output, `${name}_files`)
   const tasks = []
 
-  return fsp.mkdir(path.join(output, dirpath), { recursive: true })
+  return fsp.mkdir(dirpath, { recursive: true })
     .then(() => axios.get(pageUrl.href))
     .then(({ data }) => {
       const $ = cheerio.load(data)
