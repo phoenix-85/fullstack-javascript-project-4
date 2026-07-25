@@ -4,6 +4,7 @@ import Listr from 'listr'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
+import process from 'node:process'
 
 function download(url, filepath) {
   return axios
@@ -24,7 +25,7 @@ function formatter(url) {
   return `${hostname}-${pathname}`
 }
 
-export default (url, output) => {
+export default (url, output = process.cwd()) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
   const dirname = `${name}_files`
