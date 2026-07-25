@@ -24,13 +24,6 @@ function formatter(url) {
   return `${hostname}-${pathname}`
 }
 
-function getAssetName(url) {
-  const { pathname } = url
-  const { ext } = path.posix.parse(pathname)
-  const slug = formatter(url)
-  return `${slug}${ext || '.html'}`
-}
-
 export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
@@ -55,7 +48,7 @@ export default (url, output) => {
           const resUrl = new URL(src, pageUrl)
 
           if (pageUrl.hostname === resUrl.hostname) {
-            const filename = getAssetName(resUrl)
+            const filename = `${formatter(resUrl)}${$(res).attr('rel') === 'canonical' ? '.html' : ''}`
             const filepath = path.join(dirpath, filename)
 
             tasks.push({
