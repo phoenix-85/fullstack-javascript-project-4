@@ -14,7 +14,6 @@ function download(url, filepath) {
       writer.on('finish', resolve)
       writer.on('error', reject)
     }))
-    .catch((e) => { throw new Error(`Failed to load resource: ${url.href}. ${e.message}`) })
 }
 
 function formatter(url) {
@@ -33,6 +32,7 @@ export default (url, output) => {
   const tasks = []
 
   return fsp.mkdir(dirpath, { recursive: true })
+    .catch((err) => { throw new Error(err.message) })
     .then(() => axios.get(pageUrl.href))
     .then(({ data }) => {
       const $ = cheerio.load(data)
