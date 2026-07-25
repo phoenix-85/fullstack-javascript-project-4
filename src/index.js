@@ -37,7 +37,6 @@ export default (url, output) => {
       const $ = cheerio.load(data)
 
       const tags = {
-        "a": "href",
         "img": "src",
         "link": "href",
         "script": "src",
