@@ -1,13 +1,19 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
+import Listr from 'listr'
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import path from 'node:path'
 
 function download(url, filepath) {
   return axios
-    .get(url, { responseType: 'stream' })
-    .then(response => response.data.pipe(fs.createWriteStream(filepath)))
+    .get(url, {responseType: 'stream'})
+    .then(response => new Promise((resolve, reject) => {
+      const writer = fs.createWriteStream(filepath)
+      response.data.pipe(writer)
+      writer.on('finish', resolve)
+      writer.on('error', reject)
+    }))
 }
 
 function formatter(url) {
@@ -21,7 +27,7 @@ export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
   const dirpath = `${name}_files`
-  const promises = []
+  const tasks = []
 
   return fsp.mkdir(dirpath, { recursive: true })
     .then(() => axios.get(pageUrl.href))
@@ -35,10 +41,8 @@ export default (url, output) => {
       }
 
       for (const [tag, attr] of Object.entries(tags)) {
-        $(tag).each((_, res) => {
+        $(`${tag}[${attr}]`).each((_, res) => {
           const src = $(res).attr(attr)
-          if (!src) return
-
           const resUrl = new URL(src, pageUrl)
 
           if (pageUrl.hostname === resUrl.hostname) {
@@ -47,7 +51,11 @@ export default (url, output) => {
               formatter(resUrl),
             )
 
-            promises.push(download(resUrl, filepath))
+            tasks.push({
+              title: resUrl.href,
+              task: () => download(resUrl, filepath),
+            })
+
             $(res).attr(attr, filepath)
           }
         })
@@ -55,5 +63,5 @@ export default (url, output) => {
 
       return fsp.writeFile(path.join(output, `${name}.html`), $.html())
     })
-    .then(() => Promise.all(promises))
+    .then(() => new Listr(tasks, { concurrent: true }).run())
 }
