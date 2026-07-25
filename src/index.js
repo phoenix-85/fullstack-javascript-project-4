@@ -19,8 +19,9 @@ function download(url, filepath) {
 function formatter(url) {
   const hostname = `${url.hostname}`.replaceAll('.','-')
   let pathname = `${url.pathname}`.replaceAll('/','-')
+  pathname = pathname.startsWith('-') ? pathname.slice(1) : pathname
   pathname = pathname.endsWith('-') ? pathname.slice(0, -1) : pathname
-  return `${hostname}${pathname}`
+  return `${hostname}-${pathname}`
 }
 
 export default (url, output) => {
