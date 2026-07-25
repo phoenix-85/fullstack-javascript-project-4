@@ -18,16 +18,17 @@ function download(url, filepath) {
 
 function formatter(url) {
   const hostname = `${url.hostname}`.replaceAll('.','-')
-  let pathname = `${url.pathname}`.replaceAll('/','-')
-  pathname = pathname.startsWith('-') ? pathname.slice(1) : pathname
-  pathname = pathname.endsWith('-') ? pathname.slice(0, -1) : pathname
+  let pathname = `${url.pathname}`
+    .replaceAll('/','-')
+    .replace(/^-+|-+$/g, '')
   return `${hostname}-${pathname}`
 }
 
 export default (url, output) => {
   const pageUrl = new URL(url)
   const name = formatter(pageUrl)
-  const dirpath = `${name}_files`
+  const dirname = `${name}_files`
+  const dirpath = path.join(output, dirname)
   const tasks = []
 
   return fsp.mkdir(dirpath, { recursive: true })
@@ -47,17 +48,15 @@ export default (url, output) => {
           const resUrl = new URL(src, pageUrl)
 
           if (pageUrl.hostname === resUrl.hostname) {
-            const filepath = path.join(
-              dirpath,
-              formatter(resUrl),
-            )
+            const filename = formatter(resUrl)
+            const filepath = path.join(dirpath, filename)
 
             tasks.push({
               title: resUrl.href,
-              task: () => download(resUrl, filepath),
+              task: () => download(resUrl.href, filepath),
             })
 
-            $(res).attr(attr, filepath)
+            $(res).attr(attr, path.join(dirname, filename))
           }
         })
       }
