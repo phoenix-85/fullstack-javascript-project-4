@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "[![Actions Status](https://github.com/phoenix-85/fullstack-javascript-project-4/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/phoenix-85/fullstack-javascript-project-4/actions)",
   "type": "module",
+  "bin": "bin/page-loader",
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
