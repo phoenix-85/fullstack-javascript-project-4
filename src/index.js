@@ -32,6 +32,7 @@ export default (url, output) => {
   const tasks = []
 
   return fsp.mkdir(dirpath, { recursive: true })
+    .catch()
     .then(() => axios.get(pageUrl.href))
     .then(({ data }) => {
       const $ = cheerio.load(data)
