@@ -64,4 +64,6 @@ export default (url, output) => {
       return fsp.writeFile(path.join(output, `${name}.html`), $.html())
     })
     .then(() => new Listr(tasks, { concurrent: true, exitOnError: true }).run())
+    .catch((e) => throw e)
+    .then(() => console.log(`Page was downloaded as ${name}.html`))
 }
