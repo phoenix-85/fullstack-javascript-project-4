@@ -1,51 +1,59 @@
 import axios from 'axios'
 import * as cheerio from 'cheerio'
-import fs from 'node:fs/promises'
+import fs from 'node:fs'
+import fsp from 'node:fs/promises'
 import path from 'node:path'
 
-function urlToName(url) {
-  return url
-    .replace(/^[a-z]+:\/\//i, '')
-    .replace(/[^a-zA-Z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+function download(url, filepath) {
+  return axios
+    .get(url, { responseType: 'stream' })
+    .then(response => response.data.pipe(fs.createWriteStream(filepath)))
+}
+
+function formatter(url) {
+  const hostname = `${url.hostname}`.replaceAll('.','-')
+  let pathname = `${url.pathname}`.replaceAll('/','-')
+  pathname = pathname.endsWith('-') ? pathname.slice(0, -1) : pathname
+  return `${hostname}${pathname}`
 }
 
 export default (url, output) => {
-  let html
-  const imgData = []
-  const name = urlToName(url)
+  const pageUrl = new URL(url)
+  const name = formatter(pageUrl)
+  const dirpath = `${name}_files`
+  const promises = []
 
-  return axios.get(url)
+  return fsp.mkdir(dirpath, { recursive: true })
+    .then(() => axios.get(pageUrl.href))
     .then(({ data }) => {
       const $ = cheerio.load(data)
 
-      const dirpath = path.join(
-        output,
-        `${name}_files`,
-      )
+      const tags = {
+        "img": "src",
+        "link": "href",
+        "script": "src",
+      }
 
-      $('img').each((_, img) => {
-        const src = $(img).attr('src')
-        const imgUrl = new URL(src, url)
+      for (const [tag, attr] of Object.entries(tags)) {
+        $(tag).each((_, res) => {
+          const src = $(res).attr(attr)
+          if (!src) return
 
-        const filepath = path.join(
-          dirpath,
-          urlToName(imgUrl.href),
-        )
+          const resUrl = new URL(src, pageUrl)
 
-        imgData.push([imgUrl, filepath])
-        $(img).attr('src', filepath)
-      })
+          if (pageUrl.hostname === resUrl.hostname) {
+            const filepath = path.join(
+              dirpath,
+              formatter(resUrl),
+            )
 
-      html = $.html()
+            promises.push(download(resUrl, filepath))
+            $(res).attr(attr, filepath)
+          }
+        })
+      }
 
-      return fs.mkdir(dirpath, { recursive: true })
+      return fsp.writeFile(path.join(output, `${name}.html`), $.html())
     })
-    .then(() => fs.writeFile(path.join(output, `${name}.html`), html))
-    .then(() => Promise.all(
-      imgData.map(([imgSource, filepath]) => {
-        return axios
-          .get(imgSource.href, { responseType: 'stream' })
-          .then(response => response.data.pipe(fs.createWriteStream(filepath)))
-      })))
+    .then(() => Promise.all(promises))
 }
